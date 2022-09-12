@@ -1,13 +1,6 @@
-# csgo-gsi-python
+# csgo-lsl-markers
 
-python library to interact with CS:GO Game State Integration.
+Send event-timestamps/markers to your lsl stream from the CS:GO game state integration
 
 ## Simple usage
 Copy the **gamestate_integration_GSI.cfg** file to *C:\Program Files (x86)\Steam\steamapps\common\Counter-Strike Global Offensive\csgo\cfg*
-```py
-server = GSIServer(("127.0.0.1", 3000), "S8RL9Z6Y22TYQK45JB4V8PHRJJMD9DS9")
-server.start_server()
-
-server.get_info("map", "name")
-server.get_info("player", "state", "flashed)
-```
