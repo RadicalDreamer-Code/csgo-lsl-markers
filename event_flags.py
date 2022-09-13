@@ -1,9 +1,30 @@
-from dataclasses import dataclass
-from lsl_outlet import send_marker
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Callable, List
+
+EVENT_ROUND_START = "Round started"
+EVENT_ROUND_END = "Round end"
+EVENT_PLAYER_KILL = "Player kill"
+EVENT_PLAYER_DIES = "Player dies"
+EVENT_PLAYER_IN_SMOKE_START = "Player inside smoke"
+EVENT_PLAYER_IN_SMOKE_END = "Player outside smoke again"
+EVENT_PLAYER_BURNING_START = "Player is burning"
+EVENT_PLAYER_BURNING_END = "Player is not burning anymore"
+EVENT_PLAYER_FLASHED_START = "Player is flashed"
+EVENT_PLAYER_FLASHED_END = "Player is not flashed anymore"
+
+
+@dataclass
+class Event:
+    name: str = ""
+    value: int = 0
+    timestamp: datetime = datetime.now()
 
 
 @dataclass
 class EventFlags:
+    _observers: List[Callable[[Event], None]] = field(default_factory=list)
+
     _alive: bool = False
     _smoked: bool = False
     _flashed: bool = False
@@ -21,7 +42,7 @@ class EventFlags:
         if self._alive is not v:
             print(f"player is alive: {v}")
             if not v:
-                send_marker("player died")
+                self._on_change(EVENT_PLAYER_DIES)
             self._alive = v
 
     @property
@@ -34,9 +55,9 @@ class EventFlags:
             print(f"player is smoked: {v}")
 
             if v:
-                send_marker("smoke started")
+                self._on_change(EVENT_PLAYER_IN_SMOKE_START)
             else:
-                send_marker("smoke ended")
+                self._on_change(EVENT_PLAYER_IN_SMOKE_END)
 
             self._smoked = v
 
@@ -50,9 +71,9 @@ class EventFlags:
             print(f"player is flashed: {v}")
 
             if v:
-                send_marker("flash started")
+                self._on_change(EVENT_PLAYER_FLASHED_START)
             else:
-                send_marker("flash ended")
+                self._on_change(EVENT_PLAYER_FLASHED_END)
 
             self._flashed = v
 
@@ -66,9 +87,9 @@ class EventFlags:
             print(f"player is burning: {v}")
 
             if v:
-                send_marker("burning started")
+                self._on_change(EVENT_PLAYER_BURNING_START)
             else:
-                send_marker("burning ended")
+                self._on_change(EVENT_PLAYER_BURNING_END)
 
             self._burning = v
 
@@ -80,7 +101,7 @@ class EventFlags:
     def kills(self, v: int) -> None:
         if self._kills is not v and v != 0:
             print(f"kills: {v}")
-            send_marker("kill")
+            self._on_change(EVENT_PLAYER_KILL, v)
             self._kills = v
 
     @property
@@ -91,5 +112,21 @@ class EventFlags:
     def round(self, v: int) -> None:
         if self._round is not v:
             print(f"round: {v}")
-            send_marker(f"round {v} ended")
+            self._on_change(EVENT_ROUND_END)
             self._round = v
+
+    def subscribe(self, func: Callable[[Event], None]) -> None:
+        self._observers.append(func)
+
+    """_summary_
+    Notify all subscribers/observers by passing the state of the event.
+    
+    """
+
+    def _on_change(self, event_name: str, value: int = 0):
+        for observer in self._observers:
+            if not callable(observer):
+                continue
+
+            event = Event(event_name, value)
+            observer(event)

@@ -1,11 +1,16 @@
 from dotenv import dotenv_values
-from event_flags import EventFlags
+from event_flags import Event, EventFlags
 from gsi.gamestate import GameState
-from gsi.information import Map, Player
+from gsi.information import Map, Player, State
 from gsi.server import GSIServer
 
-
 event_flags = EventFlags()
+
+# add functions here which should react to events
+@event_flags.subscribe
+def test(event: Event):
+    print(event.__dict__)
+
 
 # is called when gamestate is received from game
 def callback(data: GameState):
@@ -15,11 +20,17 @@ def callback(data: GameState):
     if not data.player.state:
         return
 
-    event_flags.alive = True if data.player.state.get("health", 0) > 0 else False
-    event_flags.flashed = True if data.player.state.get("flashed", 0) > 0 else False
-    event_flags.smoked = True if data.player.state.get("smoked", 0) > 0 else False
-    event_flags.burning = True if data.player.state.get("burning", 0) > 0 else False
-    event_flags.kills = data.player.state.get("round_kills")
+    state = (
+        data.player.state.__dict__
+        if isinstance(data.player.state, State)
+        else data.player.state
+    )
+
+    event_flags.alive = (state.get("health") or 0) > 0
+    event_flags.flashed = (state.get("flashed") or 0) > 0
+    event_flags.smoked = (state.get("smoked") or 0) > 0
+    event_flags.burning = (state.get("burning") or 0) > 0
+    event_flags.kills = state.get("round_kills") or 0
 
     event_flags.round = data.map.round
 
@@ -30,7 +41,6 @@ if __name__ == "__main__":
     if key is None:
         print("key not found. .env created?")
 
-    print(key)
     server = GSIServer(("0.0.0.0", 3000), key, callback)
     server.start_server()
 

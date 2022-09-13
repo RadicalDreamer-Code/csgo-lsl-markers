@@ -23,7 +23,7 @@ class GSIServer(HTTPServer):
         try:
             thread = Thread(target=self.serve_forever, daemon=True)
             thread.start()
-            print("Server started")
+            print("Game state server started")
         except:
             print("Could not start server.")
 
