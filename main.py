@@ -47,6 +47,10 @@ def callback(data: GameState):
         else event_flags.observer_slot
     )
 
+    # map data
+    event_flags.round = data.map.round
+
+    # player data
     if data.player.observer_slot != event_flags.observer_slot:
         return
 
@@ -55,8 +59,6 @@ def callback(data: GameState):
     event_flags.smoked = (state.get("smoked") or 0) > 0
     event_flags.burning = (state.get("burning") or 0) > 0
     event_flags.kills = state.get("round_kills") or 0
-
-    event_flags.round = data.map.round
 
 
 if __name__ == "__main__":
