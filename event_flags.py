@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+from itertools import count
 from typing import Callable, List
 
 EVENT_ROUND_START = "Round started"
@@ -13,18 +14,22 @@ EVENT_PLAYER_BURNING_END = "Player is not burning anymore"
 EVENT_PLAYER_FLASHED_START = "Player is flashed"
 EVENT_PLAYER_FLASHED_END = "Player is not flashed anymore"
 
+counter = count()
+
 
 @dataclass
 class Event:
+    # index: int = field(default_factory=lambda: next(counter))
     name: str = ""
     value: int = 0
-    timestamp: datetime = datetime.now()
+    timestamp: datetime = field(default_factory=datetime.now)
 
 
 @dataclass
 class EventFlags:
     _observers: List[Callable[[Event], None]] = field(default_factory=list)
 
+    observer_slot: int = -1  # observer_slot indicates which player is currently watched
     _alive: bool = False
     _smoked: bool = False
     _flashed: bool = False
@@ -128,5 +133,6 @@ class EventFlags:
             if not callable(observer):
                 continue
 
+            print("new event")
             event = Event(event_name, value)
             observer(event)
