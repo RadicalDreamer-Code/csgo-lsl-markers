@@ -11,3 +11,13 @@ Create a **.env** file inside the project root folder and add following data:
 key=S8RL9Z6Y22TYQK45JB4V8PHRJJMD9DS9
 ```
 The key needs to be the same inside the .cfg file in order for the authentication to work.
+
+Use the *subscribe*-decorator from EventFlags() to pass the event values to a function that gets triggered if any event change happen.
+
+```py
+event_flags = EventFlags()
+
+@event_flags.subscribe
+def write_to_csv(event: Event):
+    csv_writer.write_to_csv(event)
+```
